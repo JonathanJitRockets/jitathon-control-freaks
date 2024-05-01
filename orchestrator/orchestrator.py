@@ -1,7 +1,7 @@
 import json
 import tempfile
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Iterable
 
 from type_definitions import ObjectiveResult, OrchestrationInstructions, StepResult
 from logging import Logger
@@ -18,15 +18,23 @@ def run_single_obj(
     pass
 
 
+def write_result_files_to_dir(result: Iterable[StepResult], working_dir: Path) -> None:
+    for step_result in result:
+        for file_name, file_contents in step_result["files_map"].items():
+            with open(working_dir / file_name, "w") as file:
+                file.write(file_contents)
+
+
 def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
     logger = Logger("orchestrator")
     logger.info("Beginning control creation orchestration")
-    working_directory = Path(tempfile.TemporaryDirectory().name)
+    working_directory = tempfile.TemporaryDirectory()
     results = {}
     for index, step in enumerate(orchestration_instructions["step_instructions"]):
         logger.info(f"Running step #{index + 1}: {step['step_objective']}")
-        step_directory = working_directory / f"step_{index + 1}"
+        step_directory = Path(working_directory.name) / f"step_{index + 1}"
         step_directory.mkdir()
+        write_result_files_to_dir(results.values(), step_directory)
         objective_result = run_single_obj(
             step_objective=step["step_objective"],
             prompt=step["step_prompt"],
@@ -41,6 +49,8 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
         logger.info(f"Step #{index + 1} complete: {step['step_objective']}")
         results[step["step_objective"]] = objective_result["result"]
     logger.info("Control creation orchestration complete")
+    logger.info(f"Results dir: {working_directory}")
+    # working_directory.cleanup()
 
 
 def main(instructions_path: str) -> None:

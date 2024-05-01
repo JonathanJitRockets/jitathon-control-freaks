@@ -13,9 +13,8 @@ class StepResult(TypedDict):
     files_map: dict[str, str]
 
 
-class ObjectiveResult(TypedDict):
+class ObjectiveResult(StepResult):
     objective_status: ObjectiveStatus
-    result: StepResult
 
 
 class OrchestrationInstructions(TypedDict):
