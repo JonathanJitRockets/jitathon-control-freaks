@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal
+from typing import Optional, TypedDict, Literal
 
 ObjectiveStatus = Literal["completed", "failed"]
 
@@ -27,5 +27,6 @@ class OrchestrationResearchInstructions(TypedDict):
     research_files: list[str]
 
 
-class OrchestrationInstructions(OrchestrationStaticInstructions, OrchestrationResearchInstructions):
-    pass
+class OrchestrationInstructions(OrchestrationResearchInstructions, OrchestrationStaticInstructions):
+    control_name: str
+    executable_name: Optional[str]

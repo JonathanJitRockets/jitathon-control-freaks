@@ -15,8 +15,10 @@ def run_single_obj(
         main_prompt: str,
         research_prompt: str,
         working_dir: Path,
+        control_name: str,
         prev_res: Dict[str, StepResult],
-        logger: Logger
+        logger: Logger,
+        executable_name: Optional[str],
 ) -> ObjectiveResult:
     pass
 
@@ -50,9 +52,11 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
             prompt=step["step_prompt"],
             main_prompt=orchestration_instructions["main_prompt"],
             research_prompt=orchestration_instructions["research_prompt"],
+            control_name=orchestration_instructions["control_name"],
             working_dir=step_directory,
             prev_res=results,
-            logger=logger
+            logger=logger,
+            executable_name=orchestration_instructions["executable_name"],
         )
         if objective_result["objective_status"] == "failed":
             logger.error(f"Objective failed: {step['step_objective']}")
@@ -64,7 +68,13 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
     # working_directory.cleanup()
 
 
-def main(instructions_path: str, research_prompt: str, research_files: Optional[list[str]] = None) -> None:
+def main(
+        instructions_path: str,
+        research_prompt: str,
+        control_name: str,
+        research_files: Optional[list[str]] = None,
+        executable_name: Optional[str] = None,
+) -> None:
     with open(instructions_path, "r") as instructions_file:
         orchestration_instructions: OrchestrationInstructions = json.load(instructions_file)
     research_files: list[str] = research_files or []
@@ -72,5 +82,17 @@ def main(instructions_path: str, research_prompt: str, research_files: Optional[
         "main_prompt": orchestration_instructions["main_prompt"],
         "step_instructions": orchestration_instructions["step_instructions"],
         "research_prompt": research_prompt,
-        "research_files": research_files
+        "research_files": research_files,
+        "control_name": control_name,
+        "executable_name": executable_name,
     })
+
+
+if __name__ == '__main__':
+    base_dir = Path(__file__).parent.parent / 'inputs'
+    main(str(base_dir / "instructions.json"),
+         (base_dir / "research_prompt.txt").read_text(),
+         "gitleaks",
+         [str(base_dir / "gitleaks")],
+         executable_name="gitleaks",
+         )
