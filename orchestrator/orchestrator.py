@@ -7,19 +7,7 @@ from typing import Dict, Iterable, Optional
 
 from type_definitions import ObjectiveResult, OrchestrationInstructions, StepResult
 from logging import Logger
-
-
-def run_single_obj(
-        step_objective: str,
-        prompt: str,
-        main_prompt: str,
-        research_prompt: str,
-        working_dir: Path,
-        prev_res: Dict[str, StepResult],
-        logger: Logger
-) -> ObjectiveResult:
-    pass
-
+from interpreter.interperter import run_single_obj
 
 def write_result_files_to_dir(result: Iterable[StepResult], working_dir: Path) -> None:
     for step_result in result:
