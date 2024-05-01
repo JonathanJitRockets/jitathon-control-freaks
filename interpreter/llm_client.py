@@ -1,11 +1,7 @@
 from litellm import completion
 import os
-# from type_definitions import StepResult
 import re
 import json
-# from typing import Dict
-#
-#
 
 # this funciton will return this:
 #   {
