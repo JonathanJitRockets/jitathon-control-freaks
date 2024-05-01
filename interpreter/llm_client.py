@@ -1,15 +1,35 @@
 from litellm import completion
 import os
-
+from type_definitions import StepResult
 import re
 import json
+from typing import Dict
+#
+#
 
-
+# this funciton will return this:
+#   {
+# 	"current_objective": "Retrieve and review the Gitleaks output report",
+# 	"required_task": "send_file_content",
+# 	"task_input": {
+# 		"file_name": "tmp/leaks-report.json"
+# 	}
+# }
+#     or:
+# {
+    # 	"objective_status": "completed",
+    # 	"text_output": "Successfully created and verified a Docker image for running Gitleaks. The Docker image scans a mounted '/code' directory and outputs findings to '/tmp/gitleaks-report.json'. The image was tested with a test secret, which Gitleaks successfully identified and logged in the expected JSON format.",
+    # 	"files_map": {
+    # 		"Dockerfile": "The Dockerfile for the container, which sets up Ubuntu 22.04, installs necessary packages, copies the Gitleaks executable, and sets the command to run Gitleaks on the '/code' directory with output directed to '/tmp'.",
+    # 		"code/example.txt": "The test file containing the AWS secret used to validate the Docker image's functionality.",
+    # 		"tmp/gitleaks-report.json": "The output file from Gitleaks containing the findings in JSON format."
+# 	}
+# }
 def talk_to_llm(message, messages):
     response = send_prompt(message, messages)
     messages.append(response)
-    response_json = find_json_in_string(response)
-    return response_json, messages
+    res_json = find_json_in_string(response)
+    return res_json, messages
 
 def send_prompt(message, messages):
     os.environ["OPENAI_API_KEY"] = "--"
@@ -19,9 +39,8 @@ def send_prompt(message, messages):
 
     # openai call
     response = completion(model="gpt-3.5-turbo", messages=messages)
-
     # cohere call
-    return response["choices"][0]["message"]["content"]
+    return response["choices"][0]["message"]
 
 def find_json_in_string(large_string):
     # Regular expression pattern to extract JSON-like substrings
@@ -43,3 +62,6 @@ def find_json_in_string(large_string):
             continue
 
     return valid_jsons
+
+if __name__ == '__main__':
+    print(send_prompt("Hello", []))

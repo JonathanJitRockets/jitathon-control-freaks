@@ -12,11 +12,24 @@ class StepResult(TypedDict):
     text_output: str
     files_map: dict[str, str]
 
+class StepOutput(TypedDict):
+    current_objective: str
+    required_task: str
+    task_input: dict[str, str]
 
 class ObjectiveResult(StepResult):
     objective_status: ObjectiveStatus
 
 
-class OrchestrationInstructions(TypedDict):
+class OrchestrationStaticInstructions(TypedDict):
     main_prompt: str
     step_instructions: list[StepInstructions]
+
+
+class OrchestrationResearchInstructions(TypedDict):
+    research_prompt: str
+    research_files: list[str]
+
+
+class OrchestrationInstructions(OrchestrationStaticInstructions, OrchestrationResearchInstructions):
+    pass
