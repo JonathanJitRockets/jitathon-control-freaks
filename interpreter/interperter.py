@@ -14,12 +14,11 @@ def execute_step(step_output: StepOutput) -> str:
     return "This is a test message"
 
 
-def execute_feedback_loop(main_prompt: str, prompt: str, working_dir: str) -> ObjectiveResult:
-    first_prompt = main_prompt + f"\n{prompt}"
-    parsed_json, message_history = talk_to_llm(first_prompt, [])
+def execute_feedback_loop(prompt: str, working_dir: str, logger: Logger) -> ObjectiveResult:
+    parsed_json, message_history = talk_to_llm(prompt, [])
     status, step_result, message_history = task_loop(parsed_json, message_history, working_dir)
     # need to handle the option of step_result=None
-    return ObjectiveResult(objective_status=status, text_output=step_result.text_output,
+    return ObjectiveResult(objective_status=status, text_output=step_result["text_output"],
                            files_map=step_result.files_map)
 
 
@@ -27,7 +26,8 @@ def task_loop(response_json, message_history, working_dir):
     system_messages_count = 1
     status = response_json[0].get("objective_status", None)
     current_response_from_llm = response_json[0]
-    while system_messages_count <= MAX_MESSAGES or status is not None:
+    while system_messages_count <= MAX_MESSAGES and status is None:
+        print("------------------ Step Start ------------------")
         step_output = StepOutput(**current_response_from_llm)
         task_input = step_output.task_input
         task_res_with_cwd = task_input.run(working_dir=working_dir)
@@ -36,17 +36,20 @@ def task_loop(response_json, message_history, working_dir):
         status = response_json[0].get("objective_status", None)
         system_messages_count += 1
         current_response_from_llm = response_json[0]
+        print("------------------ Step Finish ------------------")
+    print("------------------ Finish Loop ------------------")
 
     if status is None:
         status = "failed"
         return status, None, message_history
     else:
-        return status, StepResult(**response_json), message_history
+        print(current_response_from_llm)
+        return status, StepResult(**current_response_from_llm), message_history
 
 
 def run_single_obj(
         step_objective: str,
-        prompt: str,
+        objective_prompt: str,
         main_prompt: str,
         research_prompt: str,
         working_dir: Path,
@@ -55,7 +58,8 @@ def run_single_obj(
         logger: Logger,
         executable_name: Optional[str],
 ) -> ObjectiveResult:
-    result = execute_feedback_loop(main_prompt, prompt, working_dir, logger)
+    initial_prompt = main_prompt + research_prompt + f"\n{objective_prompt}" + f"Your starting location is {working_dir}" + f"The directory tree is: {print_tree(working_dir)}" + f"You have the {control_name} executable in the current directory named {executable_name}."
+    result = execute_feedback_loop(prompt=initial_prompt, working_dir=str(working_dir), logger=logger)
     prev_res[step_objective] = result
     return result
 

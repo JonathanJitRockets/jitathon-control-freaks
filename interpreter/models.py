@@ -55,7 +55,7 @@ class CommandTaskInput(TaskInputRunner):
         try:
             result = subprocess.run(self.command, shell=True, check=True, text=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
-            return result.stdout or "Done"
+            return result.stdout or result.stderr or "Done"
         except subprocess.CalledProcessError as e:
             return e.stderr
 
