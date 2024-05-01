@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal, NotRequired
+from typing import TypedDict, Literal
 
 ObjectiveStatus = Literal["completed", "failed"]
 
@@ -14,7 +14,7 @@ class StepResult(TypedDict):
 
 
 class ObjectiveResult(StepResult):
-    objective_status: NotRequired[ObjectiveStatus]
+    objective_status: ObjectiveStatus
 
 
 class OrchestrationStaticInstructions(TypedDict):
