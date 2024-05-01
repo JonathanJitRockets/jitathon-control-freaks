@@ -48,9 +48,12 @@ def run_single_obj(
         step_objective: str,
         prompt: str,
         main_prompt: str,
+        research_prompt: str,
         working_dir: Path,
+        control_name: str,
         prev_res: Dict[str, StepResult],
-        logger: Logger
+        logger: Logger,
+        executable_name: Optional[str],
 ) -> ObjectiveResult:
     result = execute_feedback_loop(main_prompt, prompt, working_dir, logger)
     prev_res[step_objective] = result
