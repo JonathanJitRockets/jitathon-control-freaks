@@ -1,7 +1,7 @@
 import os
 from logging import Logger
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from interpreter.utils import print_tree
 from llm_client import talk_to_llm
@@ -32,7 +32,7 @@ def task_loop(response_json, message_history, working_dir):
         task_input = step_output.task_input
         task_res_with_cwd = task_input.run(working_dir=working_dir)
         response_json, message_history = talk_to_llm(task_res_with_cwd, message_history)
-        print(response_json[0]["current_objective"])
+        print(response_json[0].get("current_objective", None))
         status = response_json[0].get("objective_status", None)
         system_messages_count += 1
         current_response_from_llm = response_json[0]
@@ -155,7 +155,8 @@ Important rule
 
 == 
 
-    """, prompt=f"""
+    """,
+                          prompt=f"""
     Our Gitleaks research:
 
 Gitleaks must run in a valid Git repo, otherwise it finds nothing.
@@ -216,6 +217,7 @@ gitleaks detect --verbose --report-format=json --report-path=/tmp/gitleaks-repor
 ```
 Your starting location is {os.getcwd()}
 The directory tree is: {print_tree(Path(os.getcwd()))}
+You have the Gitleaks executable in the current directory.
 Your objective is to wrap the Control in a Docker image. In your environment you have:
 
 - The Control executable
@@ -226,6 +228,7 @@ You will use the Ubuntu 22.04 Image.
 Your goal is to build a Docker image that upon setting up the container, runs the Control on the `/code` directory. It will then make sure that the output is written to the `/tmp` directory. The image will show the output of the Control if its logs are inspected.  You must make sure it works by checking that the docker image properly finds the provided example finding, and that a valid JSON result file is created.
 
 You will create the image and verify that it works properly. This is the definition of your objective.
+
     """, working_dir=os.getcwd())
 
 
