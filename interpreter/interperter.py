@@ -16,7 +16,7 @@ def execute_step(step_output: StepOutput) -> str:
 def execute_feedback_loop(prompt: str, working_dir: str, logger: Logger, model: str) -> ObjectiveResult:
     # Retry 4 times:
 
-    while i in range(4):
+    while i := 0 in range(4):
         try:
             parsed_json, message_history = talk_to_llm(prompt, [], model)
             status, step_result, message_history = task_loop(
