@@ -21,11 +21,11 @@ def run_single_obj(
 def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
     logger = Logger("orchestrator")
     logger.info("Beginning control creation orchestration")
-    working_directory = Path(tempfile.TemporaryDirectory().name)
+    working_directory = tempfile.TemporaryDirectory()
     results = {}
     for index, step in enumerate(orchestration_instructions["step_instructions"]):
         logger.info(f"Running step #{index + 1}: {step['step_objective']}")
-        step_directory = working_directory / f"step_{index + 1}"
+        step_directory = Path(working_directory.name) / f"step_{index + 1}"
         step_directory.mkdir()
         objective_result = run_single_obj(
             step_objective=step["step_objective"],
@@ -41,6 +41,8 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
         logger.info(f"Step #{index + 1} complete: {step['step_objective']}")
         results[step["step_objective"]] = objective_result["result"]
     logger.info("Control creation orchestration complete")
+    logger.info(f"Results dir: {working_directory}")
+    # working_directory.cleanup()
 
 
 def main(instructions_path: str) -> None:
