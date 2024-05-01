@@ -1,4 +1,5 @@
 import json
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Dict, Iterable, Optional
@@ -11,6 +12,7 @@ def run_single_obj(
         step_objective: str,
         prompt: str,
         main_prompt: str,
+        research_prompt: str,
         working_dir: Path,
         prev_res: Dict[str, StepResult],
         logger: Logger
@@ -25,6 +27,11 @@ def write_result_files_to_dir(result: Iterable[StepResult], working_dir: Path) -
                 file.write(file_contents)
 
 
+def write_research_files_to_dir(research_files: list[str], working_dir: Path) -> None:
+    for file_path in research_files:
+        shutil.copy(file_path, working_dir)
+
+
 def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
     logger = Logger("orchestrator")
     logger.info("Beginning control creation orchestration")
@@ -35,10 +42,12 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
         step_directory = Path(working_directory.name) / f"step_{index + 1}"
         step_directory.mkdir()
         write_result_files_to_dir(results.values(), step_directory)
+        write_research_files_to_dir(orchestration_instructions["research_files"], step_directory)
         objective_result = run_single_obj(
             step_objective=step["step_objective"],
             prompt=step["step_prompt"],
             main_prompt=orchestration_instructions["main_prompt"],
+            research_prompt=orchestration_instructions["research_prompt"],
             working_dir=step_directory,
             prev_res=results,
             logger=logger
