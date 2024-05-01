@@ -12,6 +12,10 @@ class StepResult(TypedDict):
     text_output: str
     files_map: dict[str, str]
 
+class StepOutput(TypedDict):
+    current_objective: str
+    required_task: str
+    task_input: dict[str, str]
 
 class ObjectiveResult(StepResult):
     objective_status: ObjectiveStatus
