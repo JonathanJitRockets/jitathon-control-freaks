@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal, NotRequired
 
 ObjectiveStatus = Literal["completed", "failed"]
 
@@ -14,9 +14,18 @@ class StepResult(TypedDict):
 
 
 class ObjectiveResult(StepResult):
-    objective_status: ObjectiveStatus
+    objective_status: NotRequired[ObjectiveStatus]
 
 
-class OrchestrationInstructions(TypedDict):
+class OrchestrationStaticInstructions(TypedDict):
     main_prompt: str
     step_instructions: list[StepInstructions]
+
+
+class OrchestrationResearchInstructions(TypedDict):
+    research_prompt: str
+    research_files: list[str]
+
+
+class OrchestrationInstructions(OrchestrationStaticInstructions, OrchestrationResearchInstructions):
+    pass

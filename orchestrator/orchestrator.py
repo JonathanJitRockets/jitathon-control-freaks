@@ -1,7 +1,7 @@
 import json
 import tempfile
 from pathlib import Path
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Optional
 
 from type_definitions import ObjectiveResult, OrchestrationInstructions, StepResult
 from logging import Logger
@@ -47,13 +47,19 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
             logger.error(f"Objective failed: {step['step_objective']}")
             return
         logger.info(f"Step #{index + 1} complete: {step['step_objective']}")
-        results[step["step_objective"]] = objective_result["result"]
+        results[step["step_objective"]] = objective_result
     logger.info("Control creation orchestration complete")
     logger.info(f"Results dir: {working_directory}")
     # working_directory.cleanup()
 
 
-def main(instructions_path: str) -> None:
+def main(instructions_path: str, research_prompt: str, research_files: Optional[list[str]] = None) -> None:
     with open(instructions_path, "r") as instructions_file:
         orchestration_instructions: OrchestrationInstructions = json.load(instructions_file)
-    orchestrate(orchestration_instructions)
+    research_files: list[str] = research_files or []
+    orchestrate({
+        "main_prompt": orchestration_instructions["main_prompt"],
+        "step_instructions": orchestration_instructions["step_instructions"],
+        "research_prompt": research_prompt,
+        "research_files": research_files
+    })
