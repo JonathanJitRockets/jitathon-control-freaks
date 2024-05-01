@@ -15,8 +15,9 @@ def execute_step(step_output: StepOutput) -> str:
 
 def execute_feedback_loop(prompt: str, working_dir: str, logger: Logger, model: str) -> ObjectiveResult:
     # Retry 4 times:
-
-    while i := 0 in range(4):
+    retry_count = 0
+    max_retries = 4
+    while retry_count < max_retries:
         try:
             parsed_json, message_history = talk_to_llm(prompt, [], model)
             status, step_result, message_history = task_loop(
@@ -26,7 +27,7 @@ def execute_feedback_loop(prompt: str, working_dir: str, logger: Logger, model: 
                                    files_map=step_result["files_map"])
         except Exception as e:
             logger.error(f"Error in feedback loop: {e}, starting over")
-            i += 1
+            retry_count += 1
 
 
 def task_loop(response_json, message_history, working_dir, model):
