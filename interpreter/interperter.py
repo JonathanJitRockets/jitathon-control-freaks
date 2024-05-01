@@ -1,7 +1,9 @@
+import os
 from logging import Logger
 from pathlib import Path
 from typing import Dict
 
+from interpreter.utils import print_tree
 from llm_client import talk_to_llm
 from type_definitions import StepResult, ObjectiveResult, StepOutput
 
@@ -12,7 +14,7 @@ def execute_step(step_output: StepOutput) -> str:
     return "This is a test message"
 
 
-def execute_feedback_loop(main_prompt: str, prompt: str, working_dir: Path) -> ObjectiveResult:
+def execute_feedback_loop(main_prompt: str, prompt: str, working_dir: str) -> ObjectiveResult:
     first_prompt = main_prompt + f"\n{prompt}"
     parsed_json, message_history = talk_to_llm(first_prompt, [])
     status, step_result, message_history = task_loop(parsed_json, message_history, working_dir)
@@ -26,11 +28,14 @@ def task_loop(response_json, message_history, working_dir):
     status = response_json[0].get("objective_status", None)
     current_response_from_llm = response_json[0]
     while system_messages_count <= MAX_MESSAGES or status is not None:
-        task_input = StepOutput(**current_response_from_llm).task_input
+        step_output = StepOutput(**current_response_from_llm)
+        task_input = step_output.task_input
         task_res_with_cwd = task_input.run(working_dir=working_dir)
         response_json, message_history = talk_to_llm(task_res_with_cwd, message_history)
-        status = response_json.get("objective_status", None)
+        print(response_json[0]["current_objective"])
+        status = response_json[0].get("objective_status", None)
         system_messages_count += 1
+        current_response_from_llm = response_json[0]
 
     if status is None:
         status = "failed"
@@ -54,12 +59,25 @@ def run_single_obj(
 
 def main():
     # This function contains the main logic of the program.
+    os.chdir("/Users/moshikol/projects/jitathon-control-freaks/interpreter/working_dir")
     execute_feedback_loop(main_prompt="""
-    You are a security researcher in a cyber security company with extensive Python and Docker knowledge. 
+  ==
+
+intro / persona
+
+You are a security researcher in a cyber security company with extensive Python and Docker knowledge. 
 
 You are a worker as part of a process of researching a new security control and integrating it as part of the platform 
 
-You have access to a local Linux environment and you will interact with me to use it and achieve your task. 
+==
+
+==
+
+env + interface
+
+You have access to a mac terminal with docker installed.
+
+You will interact with me to use it and achieve your task. 
 
 You will have the history of our conversation so that you can continue from the last point.
 
@@ -69,7 +87,7 @@ You can ask me to do the following commands:
 2. Send content of file - I will provide you with the contents of a local file
 3. Write content to file - I will write the content you provide to a file you ask me to
 
-You will receive a main objective and you can divide to sub objectives if needed. Once you believe you completed an objective, you can do what is needed to decide if the objective was completed or not (for example - ask me for an output of a file that contains the result of the task)
+You will receive a main objective and you can divide to tasks if needed. Once you believe you completed a task, you can do what is needed to decide if the objective was completed or not (for example - ask me for an output of a file that contains the result of the task)
 
 Your response will be in the following structure:
 
@@ -83,7 +101,7 @@ Your response will be in the following structure:
 
 Required task can be: run_command, send_file_content, write_content_to_file
 
-Objects are:
+Valid task input objects are:
 
 {”command”: “ls -l” } - Run command
 
@@ -91,27 +109,30 @@ Objects are:
 
 {"file_name": "file.txt", "file_content": "..."} - Write content to file
 
-Be sure to use commands like ls, pwd and such to find where you are in case you get stuck.
+Be sure to use the command ls -lah, in order to find where you are in case you get stuck.
 
-You are located in /Users/jonathan/Tests/claude/test-repo. Be sure to go back there if you suddenly find yourself in an unfamiliar place by accident (unless that’s part of the task)
+Once you determined that you successfully completed the overall objective you were provided (not a single task), send the following json message:
 
-Also if you see that you are stuck after 3-4 steps on the same sub task, you can send the following and I will provide you with some input:
+```json
+ {
+	 "objective_status": "completed",
+	 "text_output": "..Explanation of what was done and what was achieved on the overall objective",
+	 "files_map": {
+			 "Dockerfile": "The dockerfile for the container",
+			 "example.py": "The main Python file that wraps the binary",
+			 "code/file.txt":"The example file that includes the findings"
+			 
+		}
+  } 
+```
 
-{”manual_input”: “required”}
+In the files map, we expect a list of relevant files that will be transferred to future tasks. You will provide the names of the files you created and for each file a description of what it does and what you did (not the file content). The file names will be the relevant path from the starting directory. 
 
-If you think you successfully completed the overall objective you were provided (not a single task), simple send:
+== 
 
- {”objective_status”: “completed”}. 
+==
 
-Do this only once you verified that it was completed successfully
-
-A few more rules:
-
-- In your response, you may add a small text above the JSON with your thoughts, but end of each response will be a ONE SINGLE json according to the instructions, no more
-
----
-
-Docker research instructions
+docker instructions
 
 When you’re testing containers, be sure to note the following:
 
@@ -120,25 +141,89 @@ When you’re testing containers, be sure to note the following:
 - Also, do not mount your starting directory straight to the container. As mentioned before, create directories for the container and mount them.
 - If you discovered that your Dockerfile was not sufficient, it’s OK to rewrite it and run the container again
 
+==
+
+==
+
+Important rule
+
+- In your response, you may add a small text above the JSON with your thoughts, but end of each response will be a ONE SINGLE json according to the instructions, no more
+- When you edit an existing file content, I expect you to write to me the entire file content, not just parts to edit - the reason for that is that I take the code as is and override the relevant file content with the code you give me, or else I would not know how to edit it.
+
+== 
+
+    """, prompt=f"""
+    Our Gitleaks research:
+
+Gitleaks must run in a valid Git repo, otherwise it finds nothing.
+
+Here is the gitleaks help:
+
+```json
+Gitleaks scans code, past or present, for secrets
+
+Usage:
+  gitleaks [command]
+
+Available Commands:
+  completion  generate the autocompletion script for the specified shell
+  detect      detect secrets in code
+  help        Help about any command
+  protect     protect secrets in code
+  version     display gitleaks version
+
+Flags:
+  -b, --baseline-path string                                                                             path to baseline with issues that can be ignored
+  -c, --config string                                                                                    config file path
+                                                                                                         order of precedence:
+                                                                                                         1. --config/-c
+                                                                                                         2. env var GITLEAKS_CONFIG
+                                                                                                         3. (--source/-s)/.gitleaks.toml
+                                                                                                         If none of the three options are used, then gitleaks will use the default config
+      --enable-rule gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token   only enable specific rules by id, ex: gitleaks detect --enable-rule=atlassian-api-token --enable-rule=slack-access-token
+      --exit-code int                                                                                    exit code when leaks have been encountered (default 1)
+      --follow-symlinks                                                                                  scan files that are symlinks to other files
+  -i, --gitleaks-ignore-path string                                                                      path to .gitleaksignore file or folder containing one (default ".")
+  -h, --help                                                                                             help for gitleaks
+      --ignore-gitleaks-allow                                                                            ignore gitleaks:allow comments
+  -l, --log-level string                                                                                 log level (trace, debug, info, warn, error, fatal) (default "info")
+      --log-opts string                                                                                  git log options
+      --max-target-megabytes int                                                                         files larger than this will be skipped
+      --no-banner                                                                                        suppress banner
+      --no-color                                                                                         turn off color for verbose output
+      --redact uint[=100]                                                                                redact secrets from logs and stdout. To redact only parts of the secret just apply a percent value from 0..100. For example --redact=20 (default 100%)
+  -f, --report-format string                                                                             output format (json, csv, junit, sarif) (default "json")
+  -r, --report-path string                                                                               report file
+  -s, --source string                                                                                    path to source (default ".")
+  -v, --verbose                                                                                          show verbose output from scan
+
+Use "gitleaks [command] --help" for more information about a command.
+```
+
 ---
-    """, prompt="""
-    Instructions on running Gitleaks:
 
-# Gitleaks Detection Guide\n\n## Overview\nThis guide provides instructions on how to use Gitleaks to detect secrets in a Git repository.\n\n## Requirements\n- Gitleaks binary available in your working directory.\n- A Git repository initialized and containing the files to be scanned.\n\n## Steps\n\n1. **Navigate to your repository:**\n   Ensure you are in the root directory of your Git repository.\n\n2. **Run Gitleaks:**\n   Execute the following command to scan the repository and output the findings in JSON format:\n\n   `bash\\n   ../gitleaks detect --source=. --report-path=../leaks-report.json --report-format=json\\n`   \n\n3. **Review the Report:**\n   After running the command, a `leaks-report.json` file will be generated in the parent directory. This file contains all detected secrets in JSON format.\n\n## Example File Content\n\n- `example-file.txt` content:\n  `\\n  This is a test file containing a secret: AKIAIMNOJVGFDXXXE4OA\\n`  \n\n## Detected Secret\n\n- The scan should detect the AWS credentials and provide details such as the location within the file, the commit hash, and the associated author information.
+An example for a secret is: `AKIAIMNOJVGFDXXXE4OA`
 
-Your objective is to wrap Gitleaks in a Docker image. In your environment you have: 
+Note that to run Gitleaks on a non-git repo, you need to provide the —no-git parameter.
 
-- The Gitleaks executable named `gitleaks`
+Example of Gitleaks execution:
+
+```json
+gitleaks detect --verbose --report-format=json --report-path=/tmp/gitleaks-report.json --source=/code --no-git
+```
+Your starting location is {os.getcwd()}
+The directory tree is: {print_tree(Path(os.getcwd()))}
+Your objective is to wrap the Control in a Docker image. In your environment you have:
+
+- The Control executable
 - Docker installed and running
 
 You will use the Ubuntu 22.04 Image.
 
-Your goal is to build a Docker image that upon setting up the container, runs Gitleaks on the `/code` directory. It will then make sure that the output is written to the `/tmp` directory. The image will show the output of Gitleaks if its logs are inspected. 
+Your goal is to build a Docker image that upon setting up the container, runs the Control on the `/code` directory. It will then make sure that the output is written to the `/tmp` directory. The image will show the output of the Control if its logs are inspected.  You must make sure it works by checking that the docker image properly finds the provided example finding, and that a valid JSON result file is created.
 
 You will create the image and verify that it works properly. This is the definition of your objective.
-
-Your starting location is /mnt/c/Users/Jonathan/test
-    """)
+    """, working_dir=os.getcwd())
 
 
 if __name__ == "__main__":

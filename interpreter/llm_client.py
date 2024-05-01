@@ -24,7 +24,9 @@ from litellm import completion
 # 	}
 # }
 def talk_to_llm(message, messages):
+    print(f"message:\n{message} \n")
     response = send_prompt(message, messages)
+
     messages.append(response)
     res_json = find_json_in_string(response["content"])
     return res_json, messages
@@ -37,9 +39,11 @@ def send_prompt(message, messages):
     messages.append(new_message)
 
     # openai call
-    response = completion(model="gpt-3.5-turbo", messages=messages)
+    response = completion(model="gpt-4-turbo", messages=messages)
+    res = dict(response["choices"][0]["message"])
+    print(res)
     # cohere call
-    return response["choices"][0]["message"]
+    return res
 
 
 def find_json_in_string(large_string):
