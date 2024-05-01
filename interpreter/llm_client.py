@@ -23,13 +23,32 @@ from litellm import completion
 # 		"tmp/gitleaks-report.json": "The output file from Gitleaks containing the findings in JSON format."
 # 	}
 # }
-def talk_to_llm(message, messages, model):
-    print(f"message:\n{message} \n")
-    response = send_prompt(message=message, messages=messages, model=model)
+import time
 
-    messages.append(response)
-    res_json = find_json_in_string(response["content"])
-    return res_json, messages
+
+def talk_to_llm(message, messages, model):
+    retry_count = 0
+    max_retries = 5
+    sleep_time = 2
+
+    while retry_count < max_retries:
+        try:
+            message += "\nWHEN YOU ARE CHANGING OR FIXING A PYTHON FILE, DO NOT FORGET TO REBUILD THE CONTAINER! OTHERWISE, THE CHANGES WILL NOT BE REFLECTED IN THE CONTAINER!"
+            print(f"message:\n{message} \n")
+            response = send_prompt(
+                message=message, messages=messages, model=model)
+
+            messages.append(response)
+            res_json = find_json_in_string(response["content"])
+            return res_json, messages
+        except Exception as e:
+            print(f"Error: {e}")
+            retry_count += 1
+            if retry_count < max_retries:
+                time.sleep(sleep_time)
+
+    print("Operation failed after 5 attempts.")
+    return None, messages
 
 
 def send_prompt(message, messages, model):

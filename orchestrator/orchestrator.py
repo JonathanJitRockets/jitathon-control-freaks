@@ -35,13 +35,18 @@ def write_research_files_to_dir(research_files: list[str], working_dir: Path) ->
 def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
     logger = Logger("orchestrator")
     logger.info("Beginning control creation orchestration")
-    if not orchestration_instructions.get('workflow_id'):
-        workflow_id = str(uuid4())
-        orchestration_instructions['workflow_id'] = workflow_id
-    else:
-        workflow_id = orchestration_instructions['workflow_id']
+    workflow_id = 'd45c2802-4f79-421a-ace9-835f740a2f6e'
+    # if not orchestration_instructions.get('workflow_id'):
+    #     workflow_id = str(uuid4())
+    #     orchestration_instructions['workflow_id'] = workflow_id
+    # else:
+    #     workflow_id = orchestration_instructions['workflow_id']
     workflows_dir = "workflows"
-    os.mkdir(f'{workflows_dir}/{workflow_id}')
+    try:
+        os.mkdir(f'{workflows_dir}/{workflow_id}')
+    except FileExistsError:
+        pass
+
     working_directory = f'{workflows_dir}/{workflow_id}'
     json.dump(orchestration_instructions, open(
         f'{working_directory}/instructions.json', 'w'))
@@ -50,7 +55,10 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
         if not step.get('output'):
             logger.info(f"Running step #{index + 1}: {step['step_objective']}")
             step_directory = Path(working_directory) / f"step_{index + 1}"
-            step_directory.mkdir()
+            try:
+                step_directory.mkdir()
+            except FileExistsError:
+                pass
             write_result_files_to_dir(results.values(), step_directory)
             write_research_files_to_dir(
                 orchestration_instructions["research_files"], step_directory)
@@ -76,7 +84,7 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
         else:
             logger.info(
                 f"Skipping step #{index + 1}: {step['step_objective']}")
-            objective_result = step.output
+            objective_result = step['output']
             if objective_result["objective_status"] == "failed":
                 logger.error(f"Objective failed: {step['step_objective']}")
                 return
