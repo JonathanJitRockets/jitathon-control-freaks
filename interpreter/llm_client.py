@@ -33,7 +33,7 @@ def talk_to_llm(message, messages):
 
 
 def send_prompt(message, messages):
-    os.environ["OPENAI_API_KEY"] = "sk-proj-swpBhAJ09C0CZHVIK8bGT3BlbkFJCEtPMukyATAKqsg51DoI"
+    os.environ["OPENAI_API_KEY"] = "--"
     # os.environ["COHERE_API_KEY"] = "your-cohere-key"
     new_message = {"content": message, "role": "user"}
     messages.append(new_message)
