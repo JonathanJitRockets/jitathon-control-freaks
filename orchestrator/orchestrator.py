@@ -85,6 +85,10 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
             results[step["step_objective"]] = objective_result
     logger.info("Control creation orchestration complete")
     logger.info(f"Results dir: {working_directory}")
+    print("Control creation orchestration complete")
+    print(f"Results dir: {working_directory}")
+    print(f"Results {results}")
+    json.dump(results, open("results.json", "w"))
     # working_directory.cleanup()
 
 
