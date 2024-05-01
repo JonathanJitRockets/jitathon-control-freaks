@@ -13,8 +13,11 @@ from type_definitions import OrchestrationInstructions, StepResult
 def write_result_files_to_dir(result: Iterable[StepResult], working_dir: Path) -> None:
     for step_result in result:
         for file_name, file_contents in step_result["files_map"].items():
-            with open(working_dir / file_name, "w") as file:
+            try:
                 os.mkdir((working_dir / file_name).parent)
+            except FileExistsError:
+                pass
+            with open(working_dir / file_name, "w") as file:
                 file.write(file_contents)
 
 
