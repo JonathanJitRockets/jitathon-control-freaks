@@ -35,7 +35,7 @@ def write_research_files_to_dir(research_files: list[str], working_dir: Path) ->
 def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
     logger = Logger("orchestrator")
     logger.info("Beginning control creation orchestration")
-    workflow_id = 'd45c2802-4f79-421a-ace9-835f740a2f6e'
+    workflow_id = 'eaf4db56-7fc8-4c15-8460-03011279c1df'
     # if not orchestration_instructions.get('workflow_id'):
     #     workflow_id = str(uuid4())
     #     orchestration_instructions['workflow_id'] = workflow_id
