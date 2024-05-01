@@ -1,3 +1,4 @@
+import json
 import tempfile
 from pathlib import Path
 from typing import Dict
@@ -40,3 +41,9 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
         logger.info(f"Step #{index + 1} complete: {step['step_objective']}")
         results[step["step_objective"]] = objective_result["result"]
     logger.info("Control creation orchestration complete")
+
+
+def main(instructions_path: str) -> None:
+    with open(instructions_path, "r") as instructions_file:
+        orchestration_instructions: OrchestrationInstructions = json.load(instructions_file)
+    orchestrate(orchestration_instructions)
