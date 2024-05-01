@@ -33,9 +33,8 @@ def talk_to_llm(message, messages, model):
 
 
 def send_prompt(message, messages, model):
-    os.environ["OPENAI_API_KEY"] = "---"
-    os.environ["ANTHROPIC_API_KEY"] = "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"
-
+    # os.environ["OPENAI_API_KEY"] = "---"
+    # os.environ["ANTHROPIC_API_KEY"] = "---"
     new_message = {"content": message, "role": "user"}
     messages.append(new_message)
     for message in messages:

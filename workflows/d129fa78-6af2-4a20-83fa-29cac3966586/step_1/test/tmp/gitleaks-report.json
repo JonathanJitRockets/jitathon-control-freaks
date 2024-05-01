@@ -1,0 +1,22 @@
+[
+ {
+  "Description": "Identified a pattern that may indicate AWS credentials, risking unauthorized cloud resource access and data breaches on AWS platforms.",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 9,
+  "EndColumn": 28,
+  "Match": "AKIAIMNOJVGFDXXXE4OA",
+  "Secret": "AKIAIMNOJVGFDXXXE4OA",
+  "File": "/code/sample.txt",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 3.6464393,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "RuleID": "aws-access-token",
+  "Fingerprint": "/code/sample.txt:aws-access-token:1"
+ }
+]
