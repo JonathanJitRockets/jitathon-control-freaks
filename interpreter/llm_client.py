@@ -1,9 +1,9 @@
 from litellm import completion
 import os
-from type_definitions import StepResult
+# from type_definitions import StepResult
 import re
 import json
-from typing import Dict
+# from typing import Dict
 #
 #
 
@@ -28,7 +28,7 @@ from typing import Dict
 def talk_to_llm(message, messages):
     response = send_prompt(message, messages)
     messages.append(response)
-    res_json = find_json_in_string(response)
+    res_json = find_json_in_string(response["content"])
     return res_json, messages
 
 def send_prompt(message, messages):
@@ -64,4 +64,4 @@ def find_json_in_string(large_string):
     return valid_jsons
 
 if __name__ == '__main__':
-    print(send_prompt("Hello", []))
+    print(talk_to_llm("Hello", []))
