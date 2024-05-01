@@ -23,23 +23,26 @@ from litellm import completion
 # 		"tmp/gitleaks-report.json": "The output file from Gitleaks containing the findings in JSON format."
 # 	}
 # }
-def talk_to_llm(message, messages):
+def talk_to_llm(message, messages, model):
     print(f"message:\n{message} \n")
-    response = send_prompt(message, messages)
+    response = send_prompt(message=message, messages=messages, model=model)
 
     messages.append(response)
     res_json = find_json_in_string(response["content"])
     return res_json, messages
 
 
-def send_prompt(message, messages):
+def send_prompt(message, messages, model):
     os.environ["OPENAI_API_KEY"] = "--"
-    # os.environ["COHERE_API_KEY"] = "your-cohere-key"
+    os.environ["ANTHROPIC_API_KEY"] = "--"
+
     new_message = {"content": message, "role": "user"}
     messages.append(new_message)
-
+    for message in messages:
+        if "_logprobs" in message:
+            del message["_logprobs"]
     # openai call
-    response = completion(model="gpt-4-turbo", messages=messages)
+    response = completion(model=model, messages=messages)
     res = dict(response["choices"][0]["message"])
     print(res)
     # cohere call

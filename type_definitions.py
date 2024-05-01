@@ -1,4 +1,4 @@
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal, Dict, List
 
 from pydantic import BaseModel
 
@@ -10,6 +10,7 @@ ObjectiveStatus = Literal["completed", "failed"]
 class StepInstructions(TypedDict):
     step_objective: str
     step_prompt: str
+    model: str
 
 
 class StepResult(TypedDict):

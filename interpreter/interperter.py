@@ -13,15 +13,15 @@ def execute_step(step_output: StepOutput) -> str:
     return "This is a test message"
 
 
-def execute_feedback_loop(prompt: str, working_dir: str, logger: Logger) -> ObjectiveResult:
-    parsed_json, message_history = talk_to_llm(prompt, [])
-    status, step_result, message_history = task_loop(parsed_json, message_history, working_dir)
+def execute_feedback_loop(prompt: str, working_dir: str, logger: Logger, model: str) -> ObjectiveResult:
+    parsed_json, message_history = talk_to_llm(prompt, [], model)
+    status, step_result, message_history = task_loop(parsed_json, message_history, working_dir, model)
     # need to handle the option of step_result=None
     return ObjectiveResult(objective_status=status, text_output=step_result["text_output"],
                            files_map=step_result["files_map"])
 
 
-def task_loop(response_json, message_history, working_dir):
+def task_loop(response_json, message_history, working_dir, model):
     system_messages_count = 1
     status = response_json[0].get("objective_status", None)
     current_response_from_llm = response_json[0]
@@ -30,7 +30,7 @@ def task_loop(response_json, message_history, working_dir):
         step_output = StepOutput(**current_response_from_llm)
         task_input = step_output.task_input
         task_res_with_cwd = task_input.run(working_dir=working_dir)
-        response_json, message_history = talk_to_llm(task_res_with_cwd, message_history)
+        response_json, message_history = talk_to_llm(task_res_with_cwd, message_history, model)
         print(response_json[0].get("current_objective", None))
         status = response_json[0].get("objective_status", None)
         system_messages_count += 1
@@ -47,18 +47,20 @@ def task_loop(response_json, message_history, working_dir):
 
 
 def run_single_obj(
-        step_objective: str,
         objective_prompt: str,
         main_prompt: str,
         research_prompt: str,
         working_dir: Path,
         control_name: str,
-        prev_res: Dict[str, StepResult],
         logger: Logger,
         executable_name: Optional[str],
+        model: str
 ) -> ObjectiveResult:
     initial_prompt = main_prompt + research_prompt + f"\n{objective_prompt}" + f"Your starting location is {working_dir} \n" + f"The directory tree is: {print_tree(working_dir)} " + f"You have the {control_name} executable in the current directory named {executable_name}."
-    result = execute_feedback_loop(prompt=initial_prompt, working_dir=str(working_dir), logger=logger)
+    additional_prompt = ""
+    if "claude" in model:
+        additional_prompt = "\nremember you are only allowed to response with a single json object"
+    result = execute_feedback_loop(prompt=initial_prompt + additional_prompt, working_dir=str(working_dir), logger=logger, model=model)
     return result
 
 # def main():

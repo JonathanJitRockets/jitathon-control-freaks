@@ -38,15 +38,14 @@ def orchestrate(orchestration_instructions: OrchestrationInstructions) -> None:
         write_result_files_to_dir(results.values(), step_directory)
         write_research_files_to_dir(orchestration_instructions["research_files"], step_directory)
         objective_result = run_single_obj(
-            step_objective=step["step_objective"],
             objective_prompt=step["step_prompt"],
             main_prompt=orchestration_instructions["main_prompt"],
             research_prompt=orchestration_instructions["research_prompt"],
             control_name=orchestration_instructions["control_name"],
             working_dir=step_directory,
-            prev_res=results,
             logger=logger,
             executable_name=orchestration_instructions["executable_name"],
+            model=step["model"]
         )
         if objective_result["objective_status"] == "failed":
             logger.error(f"Objective failed: {step['step_objective']}")
