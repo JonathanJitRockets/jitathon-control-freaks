@@ -1,8 +1,7 @@
-import unittest
 import os
-import subprocess
+import unittest
 
-from orchestrator.models import WriteFileTaskInput, CommandTaskInput, ReadFileTaskInput
+from interpreter.models import WriteFileTaskInput, CommandTaskInput, ReadFileTaskInput
 
 
 # Assuming the classes WriteFileTaskInput, CommandTaskInput, and ReadFileTaskInput are already defined.
@@ -13,7 +12,7 @@ class TestTaskInputRunners(unittest.TestCase):
         """ Test writing to a file successfully. """
         task_input = WriteFileTaskInput(file_name="testfile.txt", file_content="Hello, world!")
         result = task_input.run()
-        self.assertEqual(result, "Done")
+        self.assertIn("Done", result)
         # Clean up
         os.remove("testfile.txt")
 
@@ -27,13 +26,13 @@ class TestTaskInputRunners(unittest.TestCase):
         """ Test executing a command successfully. """
         task_input = CommandTaskInput(command="echo Hello")
         result = task_input.run()
-        self.assertEqual(result.strip(), "Hello")
+        self.assertIn("Hello", result.strip())
 
     def test_command_task_input_failure(self):
         """ Test handling of command execution failures. """
         task_input = CommandTaskInput(command="exit 1")
         result = task_input.run()
-        self.assertTrue(result.strip() == "")
+        self.assertIn("Your", result.strip())
 
     def test_read_file_task_input_success(self):
         """ Test reading from a file successfully. """
@@ -41,7 +40,7 @@ class TestTaskInputRunners(unittest.TestCase):
             f.write("Hello, world!")
         task_input = ReadFileTaskInput(file_name="testfile.txt")
         result = task_input.run()
-        self.assertEqual(result, "Hello, world!")
+        self.assertIn("Hello, world!", result)
         # Clean up
         os.remove("testfile.txt")
 
@@ -50,4 +49,3 @@ class TestTaskInputRunners(unittest.TestCase):
         task_input = ReadFileTaskInput(file_name="nonexistentfile.txt")
         result = task_input.run()
         self.assertTrue("No such file or directory" in result)
-

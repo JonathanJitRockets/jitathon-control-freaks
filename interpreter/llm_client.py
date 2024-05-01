@@ -1,7 +1,9 @@
-from litellm import completion
+import json
 import os
 import re
-import json
+
+from litellm import completion
+
 
 # this funciton will return this:
 #   {
@@ -13,12 +15,12 @@ import json
 # }
 #     or:
 # {
-    # 	"objective_status": "completed",
-    # 	"text_output": "Successfully created and verified a Docker image for running Gitleaks. The Docker image scans a mounted '/code' directory and outputs findings to '/tmp/gitleaks-report.json'. The image was tested with a test secret, which Gitleaks successfully identified and logged in the expected JSON format.",
-    # 	"files_map": {
-    # 		"Dockerfile": "The Dockerfile for the container, which sets up Ubuntu 22.04, installs necessary packages, copies the Gitleaks executable, and sets the command to run Gitleaks on the '/code' directory with output directed to '/tmp'.",
-    # 		"code/example.txt": "The test file containing the AWS secret used to validate the Docker image's functionality.",
-    # 		"tmp/gitleaks-report.json": "The output file from Gitleaks containing the findings in JSON format."
+# 	"objective_status": "completed",
+# 	"text_output": "Successfully created and verified a Docker image for running Gitleaks. The Docker image scans a mounted '/code' directory and outputs findings to '/tmp/gitleaks-report.json'. The image was tested with a test secret, which Gitleaks successfully identified and logged in the expected JSON format.",
+# 	"files_map": {
+# 		"Dockerfile": "The Dockerfile for the container, which sets up Ubuntu 22.04, installs necessary packages, copies the Gitleaks executable, and sets the command to run Gitleaks on the '/code' directory with output directed to '/tmp'.",
+# 		"code/example.txt": "The test file containing the AWS secret used to validate the Docker image's functionality.",
+# 		"tmp/gitleaks-report.json": "The output file from Gitleaks containing the findings in JSON format."
 # 	}
 # }
 def talk_to_llm(message, messages):
@@ -27,16 +29,18 @@ def talk_to_llm(message, messages):
     res_json = find_json_in_string(response["content"])
     return res_json, messages
 
+
 def send_prompt(message, messages):
-    os.environ["OPENAI_API_KEY"] = "--"
+    os.environ["OPENAI_API_KEY"] = "sk-proj-swpBhAJ09C0CZHVIK8bGT3BlbkFJCEtPMukyATAKqsg51DoI"
     # os.environ["COHERE_API_KEY"] = "your-cohere-key"
-    new_message = { "content": message,"role": "user"}
+    new_message = {"content": message, "role": "user"}
     messages.append(new_message)
 
     # openai call
     response = completion(model="gpt-3.5-turbo", messages=messages)
     # cohere call
     return response["choices"][0]["message"]
+
 
 def find_json_in_string(large_string):
     # Regular expression pattern to extract JSON-like substrings
@@ -58,6 +62,7 @@ def find_json_in_string(large_string):
             continue
 
     return valid_jsons
+
 
 if __name__ == '__main__':
     print(talk_to_llm("Hello", []))

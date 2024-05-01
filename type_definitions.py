@@ -1,5 +1,9 @@
 from typing import TypedDict, Literal
 
+from pydantic import BaseModel
+
+from interpreter.models import TaskInput
+
 ObjectiveStatus = Literal["completed", "failed"]
 
 
@@ -12,10 +16,12 @@ class StepResult(TypedDict):
     text_output: str
     files_map: dict[str, str]
 
-class StepOutput(TypedDict):
+
+class StepOutput(BaseModel):
     current_objective: str
     required_task: str
-    task_input: dict[str, str]
+    task_input: TaskInput
+
 
 class ObjectiveResult(StepResult):
     objective_status: ObjectiveStatus

@@ -2,12 +2,13 @@ import json
 import os
 import shutil
 import tempfile
-from pathlib import Path
-from typing import Dict, Iterable, Optional
-
-from type_definitions import ObjectiveResult, OrchestrationInstructions, StepResult
 from logging import Logger
+from pathlib import Path
+from typing import Iterable, Optional
+
 from interpreter.interperter import run_single_obj
+from type_definitions import OrchestrationInstructions, StepResult
+
 
 def write_result_files_to_dir(result: Iterable[StepResult], working_dir: Path) -> None:
     for step_result in result:
