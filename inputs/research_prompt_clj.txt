@@ -1,0 +1,69 @@
+Our Clojure tool research:
+
+Our tool is clj-holmes
+
+clj-holmes is a binary executable
+
+Here is the clj-holmes help (`ggshield secret scan --help`):
+
+```json
+NAME:
+ clj-holmes scan - Performs a scan for a path
+
+USAGE:
+ clj-holmes scan [command options] [arguments...]
+
+OPTIONS:
+   -p, --scan-path S*                                                Path to scan
+   -d, --rules-directory S              /tmp/clj-holmes-rules/       Directory to read rules
+   -o, --output-file S                  clj_holmes_scan_results.txt  Output file
+   -t, --output-type json|sarif|stdout  stdout                       Output type
+   -T, --rule-tags S                                                 Only use rules with specified tags to perform the scan
+   -S, --rule-severity S                                             Only use rules with specified severity to perform the scan
+   -P, --rule-precision S                                            Only use rules with specified precision to perform the scan
+   -i, --ignored-paths S                                             Regex for paths and files that shouldn't be scanned
+   -f, --[no-]fail-on-result                                         Enable or disable fail if results were found (useful for CI/CD)
+   -v, --[no-]verbose                                                Enable or disable scan process feedback.
+   -?, --help
+```
+
+---
+
+An example of a vulnerable code can be found in the file file.clj in your cwd.
+
+An example for a json scan result is:
+
+```json
+[
+  {
+    "filename": "/tmp/clj-vuln/file.clj",
+    "findings": [
+      {
+        "row": 8,
+        "col": 12,
+        "end-row": 8,
+        "end-col": 45,
+        "parent": "insecure-crypto-example/weak-hash-function",
+        "code": "(MessageDigest/getInstance \"MD5\")"
+      }
+    ],
+    "name": "Usage of weak hash function md5",
+    "message": "Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and is therefore not suitable as a cryptographic signature."
+  }
+]
+
+```
+
+Example of clj-holmes execution:
+
+```bash
+clj-holmes scan -p <code> -t json -o output.json
+```
+
+This will store the output in the `output.json` file.
+Make sure you build the docker images for the following steps using linux/amd64 architecture.
+(docker buildx build --platform linux/amd64 ...)
+
+Before scanning you will need to fetch the rules using  `clj-holmes fetch-rules`
+Make sure the rules were properly fetched. You should put the `fetch-rules` command as part of the docker entrypoint
+It is best to create a script that will do both the `fetch-rules` and `scan` commands.

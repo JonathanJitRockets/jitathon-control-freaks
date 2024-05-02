@@ -1,0 +1,115 @@
+Our GitGuardian research:
+
+GitGuardian’s CLI tool is called GGShield
+
+ggshield can be installed from pypi and requires python3.8 or higher
+
+ggshield requires the git executable to be present in the environment so make sure to install it.
+
+Here is the ggshield help (`ggshield secret scan --help`):
+
+```json
+Usage: ggshield secret scan [OPTIONS] COMMAND [ARGS]...
+
+  Commands to scan various contents.
+
+Options:
+  -b, --banlist-detector DETECTOR
+                                  Exclude results from a detector.
+  --ignore-known-secrets          Ignore secrets already known by GitGuardian
+                                  dashboard.
+  --exclude PATTERNS              Do not scan paths that match the specified
+                                  glob-like patterns.
+  --exit-zero                     Always return a 0 (non-error) status code,
+                                  even if incidents are found. This option can
+                                  also be set with the `GITGUARDIAN_EXIT_ZERO`
+                                  environment variable.
+  --show-secrets                  Show secrets in plaintext instead of hiding
+                                  them.
+  -o, --output PATH               Redirect ggshield output to PATH.
+  --json                          Use JSON output.
+  --check-for-updates / --no-check-for-updates
+                                  After executing commands, check if a new
+                                  version of ggshield is available.
+  --allow-self-signed             Ignore ssl verification.
+  --log-file FILE                 Send log output to FILE. Use '-' to redirect
+                                  to stderr.
+  --debug                         Send log output to stderr. Equivalent to
+                                  `--log-file -`.
+  -v, --verbose                   Verbose display mode.
+  -h, --help                      Show this message and exit.
+
+Commands:
+  archive       Scan an archive file.
+  ci            Scan the set of pushed commits that triggered the CI...
+  commit-range  Scan each commit in the given commit range.
+  docker        Scan a Docker image after exporting its filesystem and...
+  docset        Scan docset JSONL files.
+  path          Scan files and directories.
+  pre-commit    Scan as a pre-commit hook all changes that have been...
+  pre-push      Scan as a pre-push git hook all commits that are about to...
+  pre-receive   Scan as a pre-receive git hook all commits about to enter...
+  pypi          Scan a pypi package.
+  repo          Scan a REPOSITORY's commits at the given URL or path.
+
+```
+
+---
+
+You can use `-y` to skip the manual confirmation
+
+An example for a json scan result is:
+
+```json
+{
+  "id": "/Users/greenfeld/dev/tenant-service/tests",
+  "type": "path_scan",
+  "entities_with_incidents": [
+    {
+      "mode": "FILE",
+      "filename": "/Users/greenfeld/dev/tenant-service/tests/integration/conftest.py",
+      "incidents": [
+        {
+          "policy": "Secrets detection",
+          "occurrences": [
+            {
+              "match": "EkkP****************Cx9e",
+              "type": "apikey",
+              "line_start": 38,
+              "line_end": 38,
+              "index_start": 26,
+              "index_end": 50,
+              "pre_line_start": 38,
+              "pre_line_end": 38
+            }
+          ],
+          "type": "Generic High Entropy Secret",
+          "validity": "no_checker",
+          "ignore_sha": "92803c3b00229422d9444f8ed026a41d0369bfe72a2ef0ed1c09b49a23c72f1f",
+          "total_occurrences": 1,
+          "incident_url": "",
+          "known_secret": false
+        }
+      ],
+      "total_incidents": 1,
+      "total_occurrences": 1
+    }
+  ],
+  "total_incidents": 1,
+  "total_occurrences": 1,
+  "secrets_engine_version": "2.111.0"
+}
+
+```
+
+Example of ggshield execution:
+
+```bash
+ggshield secret scan path -r <path> --json -y -o output.json
+```
+
+This will store the output in the `output.json` file.
+
+ggshield requires an env var with the API key to work.
+The API key will be provided to you in the file `api_key`.
+The env var should be named `GITGUARDIAN_API_KEY`

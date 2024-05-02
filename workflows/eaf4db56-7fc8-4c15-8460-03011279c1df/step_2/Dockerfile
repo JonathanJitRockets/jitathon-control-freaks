@@ -1,7 +1,0 @@
-FROM ubuntu:22.04
-
-RUN apt-get update && apt-get install -y python3-pip
-RUN pip3 install checkov
-
-COPY entrypoint.py /entrypoint.py
-ENTRYPOINT ["python3", "/entrypoint.py"]
