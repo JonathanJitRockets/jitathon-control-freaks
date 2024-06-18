@@ -21,3 +21,6 @@ def load_multiple_yamls(*file_paths):
 
 result = load_multiple_yamls('file1.yaml', 'file2.yaml')
 print(result)
+
+
+
